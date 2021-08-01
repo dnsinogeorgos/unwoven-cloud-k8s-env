@@ -8,7 +8,7 @@ export COLOR_LIGHT_GREEN='\e[0;49;32m'
 cp kubeconfig_* ~/.kube/config
 chmod 0600 ~/.kube/config
 
-kubectl apply -f deployments/eks-admin-service-account.yaml
+kubectl apply -f ../../manifests/eks-admin-service-account.yaml
 echo ""
 
 SECRET_RESOURCE=$(kubectl get secrets -n kube-system -o name | grep eks-admin)
