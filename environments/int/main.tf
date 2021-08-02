@@ -204,3 +204,38 @@ resource "helm_release" "loki-stack" {
     )
   ]
 }
+
+resource "helm_release" "traefik" {
+  name       = "traefik"
+  repository = "https://helm.traefik.io/traefik"
+  chart      = "traefik"
+
+  namespace        = "traefik"
+  create_namespace = true
+}
+
+// TODO: https://www.padok.fr/en/blog/external-dns-route53-eks
+//resource "helm_release" "external-dns" {
+//  name       = "external-dns"
+//  repository = "https://charts.bitnami.com/bitnami"
+//  chart      = "external-dns"
+//  version    = "5.2.2"
+//
+//  namespace        = "external-dns"
+//  create_namespace = true
+//
+//  values = [
+//    yamlencode(
+//      {
+//        //        domainFilters = [".${local.account["zone_name"]}"]
+//        provider   = "aws"
+//        registry   = "txt"
+//        sources    = ["ingresses"]
+//        txtOwnerId = local.eks_cluster["eks_cluster_id"]
+//        //        zoneIdFilters = [local.account["zone_id"]]
+//        zoneNameFilters = [local.account["zone_name"]]
+//        txtPrefix       = "eks-"
+//      }
+//    )
+//  ]
+//}
