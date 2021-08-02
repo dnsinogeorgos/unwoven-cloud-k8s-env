@@ -1,8 +1,6 @@
 .idea
 **/.terraform
 **/.terraform.lock.hcl
-**/terraform.tfconf
-**/terraform.tfvars
 **/terraform.tfstate
 **/terraform.tfstate.*
 **/kubeconfig_*

@@ -14,7 +14,7 @@ data "terraform_remote_state" "aws-int" {
 }
 
 locals {
-  state           = data.terraform_remote_state.aws-int.outputs.state
+  account         = data.terraform_remote_state.aws-int.outputs.account
   vpc             = data.terraform_remote_state.aws-int.outputs.vpc
   subnets         = data.terraform_remote_state.aws-int.outputs.subnets
   efs             = data.terraform_remote_state.aws-int.outputs.efs
@@ -35,7 +35,7 @@ module "kubeconfig" {
   source = "../../modules/kubeconfig"
 
   cluster_id                                   = local.eks_cluster["eks_cluster_id"]
-  kubeconfig_aws_authenticator_additional_args = ["-r", local.state["role_arn"]]
+  kubeconfig_aws_authenticator_additional_args = ["-r", local.account["role_arn"]]
 }
 
 // https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html
