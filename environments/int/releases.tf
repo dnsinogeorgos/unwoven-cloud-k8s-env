@@ -236,16 +236,6 @@ resource "helm_release" "loki-stack" {
               root_url = "https://grafana.${local.zone_name}"
               domain   = "grafana.${local.zone_name}"
             }
-            "auth.azuread" = {
-              name          = "Azure AD"
-              enabled       = "true"
-              allow_sign_up = "true"
-              client_id     = local.grafana_client_id
-              client_secret = local.grafana_client_secret
-              scopes        = "openid email profile"
-              auth_url      = "https://login.microsoftonline.com/47316e8f-33d8-40e9-806a-4cd458b4d785/oauth2/v2.0/authorize"
-              token_url     = "https://login.microsoftonline.com/47316e8f-33d8-40e9-806a-4cd458b4d785/oauth2/v2.0/token"
-            }
           }
           ingress = {
             enabled = true
