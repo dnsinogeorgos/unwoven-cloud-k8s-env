@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - kuard.monitoring.everypay.gr
+    - kuard.	int.6cb06.xyz
     secretName: quickstart-example-tls
   rules:
-  - host: kuard.monitoring.everypay.gr
+  - host: kuard.	int.6cb06.xyz
     http:
       paths:
       - path: /

@@ -6,7 +6,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: aws@everypay.gr
+    email: dnsinogeorgos@protonmail.ch
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:

@@ -78,7 +78,7 @@ resource "helm_release" "aws-efs-csi-driver" {
 
 // triggered on ingress and services (loadbalancer) with the following
 //  annotations:
-//    external-dns.alpha.kubernetes.io/hostname: <subdomain>.monitoring.everypay.gr.
+//    external-dns.alpha.kubernetes.io/hostname: <subdomain>.	int.6cb06.xyz.
 resource "helm_release" "external-dns" {
   name       = "external-dns"
   repository = "https://charts.bitnami.com/bitnami"
