@@ -13,15 +13,6 @@ data "terraform_remote_state" "aws-int" {
   }
 }
 
-data "terraform_remote_state" "aad-int" {
-  backend = "s3"
-  config = {
-    bucket = var.aad-int_bucket
-    key    = var.aad-int_key
-    region = var.aad-int_region
-  }
-}
-
 data "aws_eks_cluster" "cluster" {
   name = local.eks_cluster_id
 }

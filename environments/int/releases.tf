@@ -156,6 +156,13 @@ resource "helm_release" "ingress-nginx" {
     yamlencode(
       {
         controller = {
+          config = {
+            enable-real-ip = "true"
+          }
+          ingressClassResource = {
+            enabled = "true"
+            default = "true"
+          }
           replicaCount = 3
           topologySpreadConstraints = [
             {
@@ -175,6 +182,50 @@ resource "helm_release" "ingress-nginx" {
   ]
 }
 
+//resource "helm_release" "haproxy" {
+//  name       = "kubernetes-ingress"
+//  repository = "https://haproxytech.github.io/helm-charts"
+//  chart      = "kubernetes-ingress"
+//  version    = "1.16.2"
+//
+//  namespace        = "haproxy-ingress"
+//  create_namespace = true
+//
+//  // https://github.com/haproxytech/helm-charts/blob/main/kubernetes-ingress/values.yaml
+//  values = [
+//    yamlencode(
+//      {
+//        controller = {
+//          config = {
+//            ssl-redirect = "true"
+//          }
+//          ingressClassResource = {
+//            enabled = "true"
+//            default = "true"
+//          }
+//          replicaCount = "3"
+//          service = {
+//            type = "LoadBalancer"
+//          }
+//          topologySpreadConstraints = [
+//            {
+//              maxSkew           = 1
+//              topologyKey       = "topology.kubernetes.io/zone"
+//              whenUnsatisfiable = "DoNotSchedule"
+//              labelSelector = {
+//                matchLabels = {
+//                  "app.kubernetes.io/name"     = "kubernetes-ingress"
+//                  "app.kubernetes.io/instance" = "kubernetes-ingress"
+//                }
+//              }
+//            }
+//          ]
+//        }
+//      }
+//    )
+//  ]
+//}
+
 // TODO: Update for EKS CloudWatch
 // TODO: Update to add dashboards with proper configuration
 // TODO: Investigate alermanager and grafana alerting
@@ -188,6 +239,7 @@ resource "helm_release" "loki-stack" {
   create_namespace = true
 
   // https://github.com/grafana/helm-charts/blob/main/charts/loki-stack/values.yaml
+  // kubectl get secret --namespace loki-stack loki-stack-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
   values = [
     yamlencode(
       {
@@ -236,11 +288,23 @@ resource "helm_release" "loki-stack" {
               root_url = "https://grafana.${local.zone_name}"
               domain   = "grafana.${local.zone_name}"
             }
+            "auth.github" = {
+              enabled               = "true"
+              allow_sign_up         = "true" // any github user can login
+              client_id             = local.gh_grafana_client_id
+              client_secret         = local.gh_grafana_client_secret
+              scopes                = "user:email,read:org"
+              auth_url              = "https://github.com/login/oauth/authorize"
+              token_url             = "https://github.com/login/oauth/access_token"
+              api_url               = "https://api.github.com/user"
+              team_ids              = ""
+              allowed_organizations = ""
+            }
           }
           ingress = {
             enabled = true
             annotations = {
-              "kubernetes.io/ingress.class"    = "nginx"
+              "kubernetes.io/ingress.class"    = "haproxy"
               "cert-manager.io/cluster-issuer" = "letsencrypt-prod"
             }
             path     = "/"
