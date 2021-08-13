@@ -1,0 +1,4 @@
+email: email@example.com
+region: the-region-7
+dnsZones:
+  - sub.domain.example

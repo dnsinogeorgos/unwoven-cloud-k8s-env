@@ -5,15 +5,18 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
+    email: {{ .Values.email }}
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: dnsinogeorgos@protonmail.ch
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
     - dns01:
         route53:
-          region: "eu-central-1"
+          region: {{ .Values.region }}
       selector:
         dnsZones:
-          - "int.6cb06.xyz"
-    - http01: {}
+          {{- range .Values.dnsZones }}
+          - {{ . | quote }}
+          {{- end }}
+    - http01:
+        ingress: {}
