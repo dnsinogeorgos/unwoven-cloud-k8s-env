@@ -13,6 +13,7 @@ module "service_accounts" {
 
   cluster_autoscaler_eks_cluster_name = local.eks_cluster_id
   loki_bucket_arn                     = local.loki_s3_bucket_arn
+  loki_sa_namespace                   = "observability"
 
   context = module.this.context
 }
@@ -214,11 +215,67 @@ resource "helm_release" "ingress-nginx" {
           metrics = {
             enabled = true
             port    = 10254
-            service = {
-              annotations = {
-                "prometheus.io/scrape" = "true"
-                "prometheus.io/port"   = "10254"
+            serviceMonitor = {
+              enabled = true
+              additionalLabels = {
+                release = "kube-prometheus-stack"
               }
+              namespaceSelector = {
+                any = true
+              }
+            }
+            prometheusRule = {
+              enabled = true
+              rules = [
+                {
+                  alert = "NGINXConfigFailed"
+                  expr  = "count(nginx_ingress_controller_config_last_reload_successful == 0) > 0"
+                  for   = "1s"
+                  labels = {
+                    severity = "critical"
+                  }
+                  annotations = {
+                    description = "bad ingress config - nginx config test failed"
+                    summary     = "uninstall the latest ingress changes to allow config reloads to resume"
+                  }
+                },
+                {
+                  alert = "NGINXCertificateExpiry"
+                  expr  = "(avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800"
+                  for   = "1s"
+                  labels = {
+                    severity = "critical"
+                  }
+                  annotations = {
+                    description = "ssl certificate(s) will expire in less then a week"
+                    summary     = "renew expiring certificates to avoid downtime"
+                  }
+                },
+                {
+                  alert = "NGINXTooMany500s"
+                  expr  = "100 * ( sum( nginx_ingress_controller_requests{status=~'5.+'} ) / sum(nginx_ingress_controller_requests) ) > 5"
+                  for   = "1m"
+                  labels = {
+                    severity = "warning"
+                  }
+                  annotations = {
+                    description = "Too many 5XXs"
+                    summary     = "More than 5% of all requests returned 5XX, this requires your attention"
+                  }
+                },
+                {
+                  alert = "NGINXTooMany400s"
+                  expr  = "100 * ( sum( nginx_ingress_controller_requests{status=~'4.+'} ) / sum(nginx_ingress_controller_requests) ) > 5"
+                  for   = "1m"
+                  labels = {
+                    severity = "warning"
+                  }
+                  annotations = {
+                    description = "Too many 4XXs"
+                    summary     = "More than 5% of all requests returned 4XX, this requires your attention"
+                  }
+                },
+              ]
             }
           }
           ingressClassResource = {
@@ -239,6 +296,10 @@ resource "helm_release" "ingress-nginx" {
               "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"                    = "*"
             }
           }
+          podAnnotations = {
+            "prometheus.io/scrape" = "true"
+            "prometheus.io/port"   = "10254"
+          }
           topologySpreadConstraints = [
             {
               maxSkew           = 1
@@ -255,75 +316,6 @@ resource "helm_release" "ingress-nginx" {
       }
     )
   ]
-}
 
-resource "helm_release" "haproxy" {
-  name       = "kubernetes-ingress"
-  repository = "https://haproxytech.github.io/helm-charts"
-  chart      = "kubernetes-ingress"
-  version    = "1.16.2"
-  atomic     = true
-
-  namespace        = "haproxy-ingress"
-  create_namespace = true
-
-  // https://github.com/haproxytech/helm-charts/blob/main/kubernetes-ingress/values.yaml
-  values = [
-    yamlencode(
-      {
-        controller = {
-          config = {
-            forwarded-for  = "true"
-            proxy-protocol = "0.0.0.0/0"
-            ssl-redirect   = "true"
-          }
-          ingressClassResource = {
-            enabled = true
-            default = false
-          }
-          logging = {
-            traffic = {
-              address  = "stdout"
-              format   = "raw"
-              facility = "daemon"
-            }
-          }
-          replicaCount = "3"
-          service = {
-            annotations = {
-              "prometheus.io/port"   = "1024"
-              "prometheus.io/scrape" = "true"
-
-              "service.beta.kubernetes.io/aws-load-balancer-connection-draining-enable"        = "true"
-              "service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout"       = "60"
-              "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout"           = "60"
-              "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
-              "service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout"               = "2"
-              "service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval"              = "5"
-              "service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold"     = "2"
-              "service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold"   = "2"
-              "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"                    = "*"
-            }
-            enablePorts = {
-              stat = false
-            }
-            type = "LoadBalancer"
-          }
-          topologySpreadConstraints = [
-            {
-              maxSkew           = 1
-              topologyKey       = "topology.kubernetes.io/zone"
-              whenUnsatisfiable = "DoNotSchedule"
-              labelSelector = {
-                matchLabels = {
-                  "app.kubernetes.io/name"     = "kubernetes-ingress"
-                  "app.kubernetes.io/instance" = "kubernetes-ingress"
-                }
-              }
-            }
-          ]
-        }
-      }
-    )
-  ]
+  depends_on = [helm_release.kube-prometheus-stack]
 }
