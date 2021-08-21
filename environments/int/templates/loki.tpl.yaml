@@ -1,7 +1,6 @@
 # https://github.com/grafana/helm-charts/blob/loki-2.6.0/charts/loki/values.yaml
 config:
-  # enabled multi-tenant mode, requires "X-Scope-OrgID" header
-#  auth_enabled: true
+  auth_enabled: true
   schema_config:
     configs:
       - chunks:
@@ -40,9 +39,6 @@ persistence:
   enabled: true
   size: 200Gi
   storageClassName: efs-sc
-service:
-  labels:
-    grafana_datasource: "1"
 serviceAccount:
   annotations:
     eks.amazonaws.com/role-arn: ${sa_role_arn}

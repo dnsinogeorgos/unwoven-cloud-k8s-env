@@ -105,14 +105,13 @@ resource "helm_release" "promtail" {
   depends_on = [helm_release.kube-prometheus-stack]
 }
 
-// kubectl get secret --namespace observability grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 resource "helm_release" "grafana" {
   name       = "grafana"
   repository = "https://grafana.github.io/helm-charts"
   chart      = "grafana"
   atomic     = true
   timeout    = 120
-  version    = "6.15.0"
+  version    = "6.16.0"
 
   namespace        = kubernetes_namespace.observability.id
   create_namespace = true
@@ -124,6 +123,9 @@ resource "helm_release" "grafana" {
     client_id     = local.gh_grafana_client_id
     client_secret = local.gh_grafana_client_secret
     aws_region    = var.aws_region
+    account_ids = {
+      Internal = local.account_id
+    }
   })]
 
   depends_on = [helm_release.kube-prometheus-stack]
