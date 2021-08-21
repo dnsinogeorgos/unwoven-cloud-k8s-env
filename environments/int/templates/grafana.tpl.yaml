@@ -1,0 +1,103 @@
+# https://github.com/grafana/helm-charts/blob/grafana-6.15.0/charts/grafana/values.yaml
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - disableDeletion: false
+        editable: true
+        folder: Base
+        name: base
+        options:
+          path: /var/lib/grafana/dashboards/base
+        orgId: 1
+        type: file
+dashboards:
+  base:
+    cert-manager:
+      datasource: Prometheus
+      gnetId: 11001
+      revision: 1
+    cluster-autoscaler:
+      datasource: Prometheus
+      gnetId: 3831
+      revision: 1
+    ingress-nginx:
+      datasource: Prometheus
+      gnetId: 9614
+      revision: 1
+    logging:
+      datasource: Loki
+      gnetId: 12611
+      revision: 1
+    loki-promtail:
+      datasource: Prometheus
+      gnetId: 10880
+      revision: 1
+    monitoring-artist-aws-eks:
+      url: https://raw.githubusercontent.com/monitoringartist/grafana-aws-cloudwatch-dashboards/master/aws-eks/aws-eks.json
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        url: http://loki:3100
+        access: proxy
+        version: 1
+#      - name: Prometheus
+#        type: prometheus
+#        url: http://prometheus-prometheus-server
+#        access: proxy
+#        isDefault: true
+      - name: CloudWatch
+        type: cloudwatch
+        access: proxy
+        uid: cloudwatch
+        editable: false
+        jsonData:
+          authType: default
+          defaultRegion: ${aws_region}
+grafana.ini:
+  auth.github:
+    enabled: true
+    allow_sign_up: true
+    client_id: ${client_id}
+    client_secret: ${client_secret}
+    api_url: https://api.github.com/user
+    auth_url: https://github.com/login/oauth/authorize
+    token_url: https://github.com/login/oauth/access_token
+    scopes: user:email,read:org
+#    allowed_organizations: ""
+#    team_ids: ""
+  server:
+    domain: grafana.${zone_name}
+    root_url: https://grafana.${zone_name}
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  enabled: true
+  hosts:
+    - grafana.${zone_name}
+  path: /
+  pathType: Prefix
+  tls:
+    - hosts:
+        - grafana.${zone_name}
+      secretName: grafana-tls
+plugins:
+  - grafana-piechart-panel
+podAnnotations:
+  cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${sa_role_arn}
+  name: ${sa_name}
+serviceMonitor:
+  enabled: true
+  labels:
+    release: kube-prometheus-stack
+sidecar:
+  dashboards:
+    enabled: true
+  datasources:
+    enabled: true

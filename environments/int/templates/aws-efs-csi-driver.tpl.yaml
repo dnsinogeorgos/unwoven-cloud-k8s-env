@@ -1,0 +1,19 @@
+# https://github.com/jetstack/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+controller:
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: ${sa_role_arn}
+    name: ${sa_name}
+storageClasses:
+  - name: efs-sc
+    parameters:
+      basePath: /dynamic_provisioning
+      directoryPerms: "700"
+      fileSystemId: ${efs_id}
+      gidRangeEnd: "2000"
+      gidRangeStart: "1000"
+      provisioningMode: efs-ap
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate

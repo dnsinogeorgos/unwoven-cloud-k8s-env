@@ -1,4 +1,4 @@
-data "aws_iam_policy_document" "aws_efs_csi_driver_role" {
+data "aws_iam_policy_document" "aws_efs_csi_driver" {
   statement {
     effect    = "Allow"
     resources = ["*"]
@@ -38,12 +38,12 @@ data "aws_iam_policy_document" "aws_efs_csi_driver_role" {
   }
 }
 
-module "aws_efs_csi_driver_role" {
+module "aws_efs_csi_driver" {
   source  = "cloudposse/eks-iam-role/aws"
   version = "0.10.0"
 
   enabled                     = var.aws_efs_csi_driver_enabled
-  aws_iam_policy_document     = data.aws_iam_policy_document.aws_efs_csi_driver_role.json
+  aws_iam_policy_document     = data.aws_iam_policy_document.aws_efs_csi_driver.json
   aws_account_number          = var.aws_account_id
   service_account_name        = var.aws_efs_csi_driver_sa_name
   service_account_namespace   = var.aws_efs_csi_driver_sa_namespace
@@ -52,7 +52,7 @@ module "aws_efs_csi_driver_role" {
   context = module.this.context
 }
 
-data "aws_iam_policy_document" "cert_manager_role" {
+data "aws_iam_policy_document" "cert_manager" {
   statement {
     effect    = "Allow"
     resources = ["arn:aws:route53:::change/*"]
@@ -75,12 +75,12 @@ data "aws_iam_policy_document" "cert_manager_role" {
   }
 }
 
-module "cert_manager_role" {
+module "cert_manager" {
   source  = "cloudposse/eks-iam-role/aws"
   version = "0.10.0"
 
   enabled                     = var.cert_manager_enabled && var.route53_zone_id != ""
-  aws_iam_policy_document     = data.aws_iam_policy_document.cert_manager_role.json
+  aws_iam_policy_document     = data.aws_iam_policy_document.cert_manager.json
   aws_account_number          = var.aws_account_id
   service_account_name        = var.cert_manager_sa_name
   service_account_namespace   = var.cert_manager_sa_namespace
@@ -89,7 +89,7 @@ module "cert_manager_role" {
   context = module.this.context
 }
 
-data "aws_iam_policy_document" "cluster_autoscaler_role" {
+data "aws_iam_policy_document" "cluster_autoscaler" {
   statement {
     effect    = "Allow"
     resources = ["*"]
@@ -128,12 +128,12 @@ data "aws_iam_policy_document" "cluster_autoscaler_role" {
   }
 }
 
-module "cluster_autoscaler_role" {
+module "cluster_autoscaler" {
   source  = "cloudposse/eks-iam-role/aws"
   version = "0.10.0"
 
   enabled                     = var.cluster_autoscaler_enabled
-  aws_iam_policy_document     = data.aws_iam_policy_document.cluster_autoscaler_role.json
+  aws_iam_policy_document     = data.aws_iam_policy_document.cluster_autoscaler.json
   aws_account_number          = var.aws_account_id
   service_account_name        = var.cluster_autoscaler_sa_name
   service_account_namespace   = var.cluster_autoscaler_namespace
@@ -142,7 +142,7 @@ module "cluster_autoscaler_role" {
   context = module.this.context
 }
 
-data "aws_iam_policy_document" "external_dns_role" {
+data "aws_iam_policy_document" "external_dns" {
   statement {
     effect    = "Allow"
     resources = ["arn:aws:route53:::hostedzone/${var.route53_zone_id}"]
@@ -161,12 +161,12 @@ data "aws_iam_policy_document" "external_dns_role" {
   }
 }
 
-module "external_dns_role" {
+module "external_dns" {
   source  = "cloudposse/eks-iam-role/aws"
   version = "0.10.0"
 
   enabled                     = var.external_dns_enabled && var.route53_zone_id != ""
-  aws_iam_policy_document     = data.aws_iam_policy_document.external_dns_role.json
+  aws_iam_policy_document     = data.aws_iam_policy_document.external_dns.json
   aws_account_number          = var.aws_account_id
   service_account_name        = var.external_dns_sa_name
   service_account_namespace   = var.external_dns_sa_namespace
@@ -175,7 +175,7 @@ module "external_dns_role" {
   context = module.this.context
 }
 
-data "aws_iam_policy_document" "loki_role" {
+data "aws_iam_policy_document" "loki" {
   statement {
     effect    = "Allow"
     resources = [var.loki_bucket_arn]
@@ -195,15 +195,108 @@ data "aws_iam_policy_document" "loki_role" {
   }
 }
 
-module "loki_role" {
+module "loki" {
   source  = "cloudposse/eks-iam-role/aws"
   version = "0.10.0"
 
   enabled                     = var.loki_enabled && var.loki_bucket_arn != ""
-  aws_iam_policy_document     = data.aws_iam_policy_document.loki_role.json
+  aws_iam_policy_document     = data.aws_iam_policy_document.loki.json
   aws_account_number          = var.aws_account_id
   service_account_name        = var.loki_sa_name
   service_account_namespace   = var.loki_sa_namespace
+  eks_cluster_oidc_issuer_url = var.eks_cluster_oidc_issuer_url
+
+  context = module.this.context
+}
+
+data "aws_iam_policy_document" "thanos" {
+  statement {
+    effect    = "Allow"
+    resources = [var.thanos_bucket_arn]
+    actions = [
+      "s3:ListObjects",
+      "s3:ListBucket",
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["${var.thanos_bucket_arn}/*"]
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+    ]
+  }
+}
+
+module "thanos" {
+  source  = "cloudposse/eks-iam-role/aws"
+  version = "0.10.0"
+
+  enabled                     = var.thanos_enabled && var.thanos_bucket_arn != ""
+  aws_iam_policy_document     = data.aws_iam_policy_document.thanos.json
+  aws_account_number          = var.aws_account_id
+  service_account_name        = var.thanos_sa_name
+  service_account_namespace   = var.thanos_sa_namespace
+  eks_cluster_oidc_issuer_url = var.eks_cluster_oidc_issuer_url
+
+  context = module.this.context
+}
+
+data "aws_iam_policy_document" "grafana" {
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [
+      "cloudwatch:DescribeAlarmsForMetric",
+      "cloudwatch:DescribeAlarmHistory",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:ListMetrics",
+      "cloudwatch:GetMetricStatistics",
+      "cloudwatch:GetMetricData",
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [
+      "logs:DescribeLogGroups",
+      "logs:GetLogGroupFields",
+      "logs:StartQuery",
+      "logs:StopQuery",
+      "logs:GetQueryResults",
+      "logs:GetLogEvents",
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [
+      "ec2:DescribeTags",
+      "ec2:DescribeInstances",
+      "ec2:DescribeRegions",
+    ]
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["tag:GetResources"]
+  }
+}
+
+module "grafana" {
+  source  = "cloudposse/eks-iam-role/aws"
+  version = "0.10.0"
+
+  enabled                     = var.grafana_enabled
+  aws_iam_policy_document     = data.aws_iam_policy_document.grafana.json
+  aws_account_number          = var.aws_account_id
+  service_account_name        = var.grafana_sa_name
+  service_account_namespace   = var.grafana_sa_namespace
   eks_cluster_oidc_issuer_url = var.eks_cluster_oidc_issuer_url
 
   context = module.this.context

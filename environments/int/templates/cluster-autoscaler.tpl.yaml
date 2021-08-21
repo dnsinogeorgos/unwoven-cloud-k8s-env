@@ -1,0 +1,18 @@
+# https://github.com/kubernetes/autoscaler/blob/master/charts/cluster-autoscaler/values.yaml
+autoDiscovery:
+  clusterName: ${eks_cluster_id}
+awsRegion: ${aws_region}
+cloudProvider: aws
+extraArgs:
+  aws-use-static-instance-list: true
+fullnameOverride: cluster-autoscaler
+rbac:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: ${sa_role_arn}
+    name: ${sa_name}
+serviceMonitor:
+  enabled: true
+  namespace: cluster-autoscaler
+  selector:
+    release: kube-prometheus-stack

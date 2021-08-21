@@ -1,0 +1,17 @@
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "creationTimestamp": "2021-08-21T13:21:39Z",
+        "deletionTimestamp": "2021-08-21T15:58:26Z",
+        "labels": {
+            "kubernetes.io/metadata.name": "observability"
+        },
+        "name": "observability",
+        "resourceVersion": "53733",
+        "uid": "b6ef72a8-d0fc-4300-8590-c2c49c304ac8"
+    },
+    "spec": {
+        "finalizers": []
+    }
+}

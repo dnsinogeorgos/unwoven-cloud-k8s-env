@@ -1,0 +1,19 @@
+# https://github.com/kubernetes-sigs/external-dns/blob/master/charts/external-dns/values.yaml
+domainFilters:
+%{ for zone_name in zone_names ~}
+  - ${zone_name}
+%{ endfor ~}
+interval: 5s
+policy: sync
+provider: aws
+registry: txt
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${sa_role_arn}
+  name: ${sa_name}
+serviceMonitor:
+  additionalLabels:
+    release: kube-prometheus-stack
+  enabled: true
+txtOwnerId: ${eks_cluster_id}
+txtPrefix: _external-dns.

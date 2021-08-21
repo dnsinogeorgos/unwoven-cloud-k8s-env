@@ -1,0 +1,71 @@
+# https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
+controller:
+  config:
+    use-proxy-protocol: "true"
+  ingressClassResource:
+    default: true
+    enabled: true
+  metrics:
+    enabled: true
+    port: 10254
+    prometheusRule:
+      enabled: true
+      rules:
+        - alert: NGINXConfigFailed
+          annotations:
+            description: bad ingress config - nginx config test failed
+            summary: uninstall the latest ingress changes to allow config reloads to resume
+          expr: count(nginx_ingress_controller_config_last_reload_successful == 0) > 0
+          for: 1s
+          labels:
+            severity: critical
+        - alert: NGINXCertificateExpiry
+          annotations:
+            description: ssl certificate(s) will expire in less then a week
+            summary: renew expiring certificates to avoid downtime
+          expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800
+          for: 1s
+          labels:
+            severity: critical
+        - alert: NGINXTooMany500s
+          annotations:
+            description: Too many 5XXs
+            summary: More than 5% of all requests returned 5XX, this requires your attention
+          expr: 100 * ( sum( nginx_ingress_controller_requests{status=~'5.+'} ) / sum(nginx_ingress_controller_requests) ) > 5
+          for: 1m
+          labels:
+            severity: warning
+        - alert: NGINXTooMany400s
+          annotations:
+            description: Too many 4XXs
+            summary: More than 5% of all requests returned 4XX, this requires your attention
+          expr: 100 * ( sum( nginx_ingress_controller_requests{status=~'4.+'} ) / sum(nginx_ingress_controller_requests) ) > 5
+          for: 1m
+          labels:
+            severity: warning
+    serviceMonitor:
+      additionalLabels:
+        release: kube-prometheus-stack
+      enabled: true
+  podAnnotations:
+    prometheus.io/port: "10254"
+    prometheus.io/scrape: "true"
+  replicaCount: 3
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-enable: "true"
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "5"
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "2"
+      service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
+      service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+  topologySpreadConstraints:
+    - labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: ingress-nginx
+      maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule

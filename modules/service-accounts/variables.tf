@@ -100,3 +100,40 @@ variable "loki_sa_namespace" {
   type    = string
   default = "loki-stack"
 }
+
+# thanos
+variable "thanos_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "thanos_bucket_arn" {
+  type    = string
+  default = ""
+}
+
+variable "thanos_sa_name" {
+  type    = string
+  default = "thanos-sa"
+}
+
+variable "thanos_sa_namespace" {
+  type    = string
+  default = "monitoring"
+}
+
+# grafana
+variable "grafana_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "grafana_sa_name" {
+  type    = string
+  default = "grafana-sa"
+}
+
+variable "grafana_sa_namespace" {
+  type    = string
+  default = "monitoring"
+}

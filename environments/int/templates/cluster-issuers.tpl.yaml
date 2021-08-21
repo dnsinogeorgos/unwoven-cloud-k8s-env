@@ -1,0 +1,6 @@
+dnsZones:
+%{ for zone_name in zone_names ~}
+  - ${zone_name}
+%{ endfor ~}
+email: ${account_email}
+region: ${aws_region}

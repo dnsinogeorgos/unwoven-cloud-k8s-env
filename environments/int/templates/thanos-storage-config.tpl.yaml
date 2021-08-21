@@ -1,0 +1,7 @@
+type: s3
+config:
+  bucket: ${bucket_id}
+  endpoint: s3.${aws_region}.amazonaws.com
+  signature_version2: false
+  sse_config:
+    type: SSE-S3

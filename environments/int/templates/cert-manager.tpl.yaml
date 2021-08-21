@@ -1,0 +1,17 @@
+# https://github.com/jetstack/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+extraArgs:
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
+installCRDs: true
+prometheus:
+  servicemonitor:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
+securityContext:
+  enabled: true
+  fsGroup: 1001
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${sa_role_arn}
+  name: ${sa_name}

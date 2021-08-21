@@ -1,0 +1,53 @@
+# https://github.com/grafana/helm-charts/blob/loki-2.6.0/charts/loki/values.yaml
+config:
+  # enabled multi-tenant mode, requires "X-Scope-OrgID" header
+#  auth_enabled: true
+  schema_config:
+    configs:
+      - chunks:
+          period: 24h
+        from: 2021-08-11
+        index:
+          period: 24h
+        object_store: aws
+        schema: v11
+        store: boltdb-shipper
+  storage_config:
+    aws:
+      bucketnames: ${bucket_id}
+      region: ${aws_region}
+      s3: s3://${aws_region}
+      sse_encryption: true
+    boltdb_shipper:
+      cache_ttl: 168h
+      query_ready_num_days: 7
+      shared_store: s3
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: ${secret_name}
+    nginx.ingress.kubernetes.io/auth-realm: Loki - Authentication required
+  enabled: true
+  hosts:
+    - host: loki.${zone_name}
+      paths: ["/"]
+  tls:
+    - hosts:
+        - loki.${zone_name}
+      secretName: loki-tls
+persistence:
+  enabled: true
+  size: 200Gi
+  storageClassName: efs-sc
+service:
+  labels:
+    grafana_datasource: "1"
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${sa_role_arn}
+  name: ${sa_name}
+serviceMonitor:
+  additionalLabels:
+    release: kube-prometheus-stack
+  enabled: true
