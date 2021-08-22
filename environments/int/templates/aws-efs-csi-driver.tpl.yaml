@@ -1,4 +1,4 @@
-# https://github.com/jetstack/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
+# https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/helm-chart-aws-efs-csi-driver-2.1.5/charts/aws-efs-csi-driver/values.yaml
 controller:
   podAnnotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
@@ -6,6 +6,11 @@ controller:
     annotations:
       eks.amazonaws.com/role-arn: ${sa_role_arn}
     name: ${sa_name}
+#prometheus:
+#  servicemonitor:
+#    enabled: true # cannot use this, prometheus uses efs volumes
+#    labels:
+#      release: kube-prometheus-stack
 storageClasses:
   - name: efs-sc
     parameters:

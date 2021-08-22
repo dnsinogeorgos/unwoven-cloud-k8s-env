@@ -33,7 +33,7 @@ config:
             - labels:
                 host:
                 method:
-                request_url:
+#                request_url:
                 status:
                 user_agent:
     # enables multi-tenant mode, sends X-Scope-OrgID header

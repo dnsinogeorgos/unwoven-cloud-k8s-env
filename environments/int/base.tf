@@ -32,7 +32,7 @@ resource "helm_release" "aws-efs-csi-driver" {
   name       = "aws-efs-csi-driver"
   repository = "https://kubernetes-sigs.github.io/aws-efs-csi-driver/"
   chart      = "aws-efs-csi-driver"
-  version    = "2.1.4"
+  version    = "2.1.5"
   atomic     = true
   timeout    = 60
 
@@ -44,6 +44,12 @@ resource "helm_release" "aws-efs-csi-driver" {
     sa_name     = local.aws_efs_csi_driver_sa.name
     efs_id      = local.efs_id
   })]
+
+  // users of efs-sc need time to shutdown before driver id destroyed
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sleep 60"
+  }
 }
 
 // TODO: decide on strategy for issuers, cluster or namespaced
@@ -53,8 +59,8 @@ resource "helm_release" "cert-manager" {
   chart      = "cert-manager"
   version    = "v1.4.2"
   atomic     = true
-  timeout    = 60
   wait       = true
+  timeout    = 60
 
   namespace        = local.cert_manager_sa.namespace
   create_namespace = true
@@ -65,6 +71,11 @@ resource "helm_release" "cert-manager" {
   })]
 
   depends_on = [helm_release.kube-prometheus-stack]
+
+  // CRDs cannot be used until cert-manager is initialized
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
 }
 
 // TODO: investigate best practices, metrics-server and prometheus (VPA)
@@ -112,8 +123,6 @@ resource "helm_release" "external-dns" {
 resource "helm_release" "cluster-issuers" {
   name  = "cluster-issuers"
   chart = "../../charts/cluster-issuers"
-
-  wait = true
 
   values = [templatefile("${path.module}/templates/cluster-issuers.tpl.yaml", {
     account_email = local.account_email

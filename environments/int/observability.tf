@@ -36,6 +36,7 @@ resource "helm_release" "kube-prometheus-stack" {
   chart      = "kube-prometheus-stack"
   version    = "17.2.1"
   atomic     = true
+  wait       = true // need this for destroy ordering
   timeout    = 120
 
   namespace = kubernetes_namespace.observability.id
@@ -49,13 +50,12 @@ resource "helm_release" "kube-prometheus-stack" {
 
   depends_on = [
     kubernetes_secret.thanos-storage-config,
-    module.service_accounts,
+    helm_release.aws-efs-csi-driver,
   ]
 }
 
-//// TODO: Update for EKS CloudWatch
 //// TODO: Update to add dashboards with proper configuration
-//// TODO: Investigate alermanager and grafana alerting
+//// TODO: Investigate alertmanager and grafana alerting
 //// TODO: Investigate smtp credentials
 module "ingress_secret_loki" {
   source = "../../modules/htpasswd"
@@ -72,6 +72,7 @@ resource "helm_release" "loki" {
   chart      = "loki"
   version    = "2.6.0"
   atomic     = true
+  wait       = true // need this for destroy ordering
   timeout    = 120
 
   namespace = kubernetes_namespace.observability.id
@@ -85,7 +86,10 @@ resource "helm_release" "loki" {
     secret_name = module.ingress_secret_loki.name
   })]
 
-  depends_on = [helm_release.kube-prometheus-stack]
+  depends_on = [
+    helm_release.aws-efs-csi-driver,
+    helm_release.kube-prometheus-stack,
+  ]
 }
 
 // TODO: multi-tenant promtail and grafana datasource
