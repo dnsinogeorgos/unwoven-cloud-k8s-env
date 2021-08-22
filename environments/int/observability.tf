@@ -28,6 +28,8 @@ module "ingress_secret_prometheus" {
   users = var.admins
 }
 
+// thanos sidecart stales at destroy, tries to ship metrics to S3 but
+// has no permissions. fix dependencies to destroy before service accounts
 resource "helm_release" "kube-prometheus-stack" {
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
@@ -45,7 +47,10 @@ resource "helm_release" "kube-prometheus-stack" {
     secret_name = module.ingress_secret_prometheus.name
   })]
 
-  depends_on = [kubernetes_secret.thanos-storage-config]
+  depends_on = [
+    kubernetes_secret.thanos-storage-config,
+    module.service_accounts,
+  ]
 }
 
 //// TODO: Update for EKS CloudWatch
