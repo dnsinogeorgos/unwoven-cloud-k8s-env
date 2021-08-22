@@ -25,7 +25,7 @@ config:
             - labels:
                 namespace: ""
       - match:
-          selector: '{app="ingress-nginx"}'
+          selector: '{app="ingress-nginx",stream="stdout"}'
           stages:
             - regex:
                 # logline example: 127.0.0.1 - - [21/Apr/2020:13:59:45 +0000] "GET /?foo=bar HTTP/1.1" 200 612 "http://example.com/lekkebot.html" "curl/7.58.0"

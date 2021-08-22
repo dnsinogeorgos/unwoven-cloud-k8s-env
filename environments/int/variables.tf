@@ -15,3 +15,8 @@ variable "aws-int_key" {
 variable "aws-int_region" {
   type = string
 }
+
+# users
+variable "admins" {
+  type = list(string)
+}

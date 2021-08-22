@@ -48,7 +48,7 @@ datasources:
 #        url: http://prometheus-prometheus-server
 #        access: proxy
 #        isDefault: true
-%{ for name, account_id in account_ids ~}
+%{ for name, id in loki_tenant_ids ~}
       - name: Loki ${name}
         type: loki
         url: http://loki:3100
@@ -57,7 +57,7 @@ datasources:
         jsonData:
           httpHeaderName1: x-scope-orgid
         secureJsonData:
-          httpHeaderValue1: "${account_id}"
+          httpHeaderValue1: "${id}"
 %{ endfor ~}
       - name: CloudWatch
         type: cloudwatch

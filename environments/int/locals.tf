@@ -8,6 +8,7 @@ locals {
   eks_node_groups = data.terraform_remote_state.aws-int.outputs.eks_node_groups
   buckets_loki    = data.terraform_remote_state.aws-int.outputs.buckets_loki
   buckets_thanos  = data.terraform_remote_state.aws-int.outputs.buckets_thanos
+  loki_tenant_ids = data.terraform_remote_state.aws-int.outputs.loki_tenant_ids
 
   account_id                  = local.account["account_id"]
   account_email               = local.account["email"]

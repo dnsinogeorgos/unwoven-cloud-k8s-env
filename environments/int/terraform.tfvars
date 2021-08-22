@@ -12,3 +12,6 @@ tags = {
   Terraform = "true"
   Namespace = "int"
 }
+
+# users
+admins = ["nicksino"]

@@ -25,7 +25,7 @@ module "ingress_secret_prometheus" {
   name      = "ingress-prometheus"
   namespace = kubernetes_namespace.observability.id
 
-  users = ["admin"]
+  users = var.admins
 }
 
 resource "helm_release" "kube-prometheus-stack" {
@@ -58,11 +58,7 @@ module "ingress_secret_loki" {
   name      = "ingress-loki"
   namespace = kubernetes_namespace.observability.id
 
-  users = [
-    "production",
-    "sandbox",
-    "staging",
-  ]
+  users = [for _, tenant_id in local.loki_tenant_ids : tenant_id]
 }
 
 resource "helm_release" "loki" {
@@ -117,15 +113,13 @@ resource "helm_release" "grafana" {
   create_namespace = true
 
   values = [templatefile("${path.module}/templates/grafana.tpl.yaml", {
-    sa_role_arn   = local.grafana_sa.role_arn
-    sa_name       = local.grafana_sa.name
-    zone_name     = local.zone_name
-    client_id     = local.gh_grafana_client_id
-    client_secret = local.gh_grafana_client_secret
-    aws_region    = var.aws_region
-    account_ids = {
-      Internal = local.account_id
-    }
+    sa_role_arn     = local.grafana_sa.role_arn
+    sa_name         = local.grafana_sa.name
+    zone_name       = local.zone_name
+    client_id       = local.gh_grafana_client_id
+    client_secret   = local.gh_grafana_client_secret
+    aws_region      = var.aws_region
+    loki_tenant_ids = local.loki_tenant_ids
   })]
 
   depends_on = [helm_release.kube-prometheus-stack]
