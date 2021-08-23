@@ -1,7 +1,8 @@
-# https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
+# https://github.com/kubernetes/ingress-nginx/blob/helm-chart-3.36.0/charts/ingress-nginx/values.yaml
 controller:
-  config:
-    use-proxy-protocol: "true"
+  hostNetwork: true
+  hostPort:
+    enabled: true
   ingressClassResource:
     default: true
     enabled: true
@@ -53,15 +54,9 @@ controller:
   replicaCount: 3
   service:
     annotations:
-      service.beta.kubernetes.io/aws-load-balancer-connection-draining-enable: "true"
-      service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
-      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
       service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-      service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
-      service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "5"
-      service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "2"
-      service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
-      service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+    externalTrafficPolicy: Local
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:

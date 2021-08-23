@@ -21,6 +21,10 @@ dashboards:
       datasource: Prometheus
       gnetId: 3831
       revision: 1
+    contour:
+      datasource: Prometheus
+      gnetId: 11023
+      revision: 1
     ingress-nginx:
       datasource: Prometheus
       gnetId: 9614
@@ -95,6 +99,7 @@ imageRenderer:
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    projectcontour.io/websocket-routes: /
   enabled: true
   hosts:
     - grafana.${zone_name}

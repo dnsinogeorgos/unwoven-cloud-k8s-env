@@ -147,13 +147,15 @@ resource "helm_release" "eventrouter" {
   values = [templatefile("${path.module}/templates/eventrouter.tpl.yaml", {})]
 }
 
+// TODO: develop zero downtime procedure for ingress updates and configuration changes
+// https://medium.com/codecademy-engineering/kubernetes-nginx-and-zero-downtime-in-production-2c910c6a5ed8
 resource "helm_release" "ingress-nginx" {
   name       = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
-  version    = "3.35.0"
+  version    = "3.36.0"
   atomic     = true
-  timeout    = 60
+  timeout    = 120
 
   namespace        = "nginx-ingress"
   create_namespace = true
@@ -162,3 +164,19 @@ resource "helm_release" "ingress-nginx" {
 
   depends_on = [helm_release.kube-prometheus-stack]
 }
+
+//resource "helm_release" "contour" {
+//  name       = "contour"
+//  repository = "https://charts.bitnami.com/bitnami"
+//  chart      = "contour"
+//  version    = "5.1.0"
+//  atomic     = true
+//  timeout    = 300
+//
+//  namespace        = "contour"
+//  create_namespace = true
+//
+//  values = [templatefile("${path.module}/templates/contour.tpl.yaml", {})]
+//
+//  depends_on = [helm_release.kube-prometheus-stack]
+//}

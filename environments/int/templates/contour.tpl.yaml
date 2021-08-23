@@ -1,0 +1,19 @@
+# https://github.com/bitnami/charts/blob/master/bitnami/contour/values.yaml
+contour:
+  image:
+    registry: docker.io
+    repository: projectcontour/contour
+    tag: v1.18.0
+envoy:
+  dnsPolicy: ClusterFirstWithHostNet
+  hostNetwork: true
+  image:
+    registry: docker.io
+    repository: envoyproxy/envoy
+    tag: v1.19.0
+  service:
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: nlb
+prometheus:
+  serviceMonitor:
+    enabled: true
