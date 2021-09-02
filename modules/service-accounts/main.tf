@@ -1,3 +1,160 @@
+// https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/helm-chart-aws-ebs-csi-driver-2.1.0/docs/example-iam-policy.json
+data "aws_iam_policy_document" "aws_ebs_csi_driver" {
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [
+      "ec2:CreateSnapshot",
+      "ec2:AttachVolume",
+      "ec2:DetachVolume",
+      "ec2:ModifyVolume",
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeInstances",
+      "ec2:DescribeSnapshots",
+      "ec2:DescribeTags",
+      "ec2:DescribeVolumes",
+      "ec2:DescribeVolumesModifications",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    resources = [
+      "arn:aws:ec2:*:*:volume/*",
+      "arn:aws:ec2:*:*:snapshot/*",
+    ]
+    actions = ["ec2:CreateTags"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "ec2:CreateAction"
+      values = [
+        "CreateVolume",
+        "CreateSnapshot",
+      ]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    resources = [
+      "arn:aws:ec2:*:*:volume/*",
+      "arn:aws:ec2:*:*:snapshot/*",
+    ]
+    actions = ["ec2:DeleteTags"]
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:CreateVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "aws:RequestTag/ebs.csi.aws.com/cluster"
+      values   = ["true"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:CreateVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "aws:RequestTag/CSIVolumeName"
+      values   = ["*"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:CreateVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "aws:RequestTag/kubernetes.io/cluster/*"
+      values   = ["owned"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:DeleteVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/ebs.csi.aws.com/cluster"
+      values   = ["true"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:DeleteVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/CSIVolumeName"
+      values   = ["*"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:DeleteVolume"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/kubernetes.io/cluster/*"
+      values   = ["owned"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:DeleteSnapshot"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/CSIVolumeSnapshotName"
+      values   = ["*"]
+    }
+  }
+
+  statement {
+    effect    = "Allow"
+    resources = ["*"]
+    actions   = ["ec2:DeleteSnapshot"]
+
+    condition {
+      test     = "StringLike"
+      variable = "ec2:ResourceTag/ebs.csi.aws.com/cluster"
+      values   = ["true"]
+    }
+  }
+}
+
+module "aws_ebs_csi_driver" {
+  source  = "cloudposse/eks-iam-role/aws"
+  version = "0.10.0"
+
+  enabled                     = var.aws_ebs_csi_driver_enabled
+  aws_iam_policy_document     = data.aws_iam_policy_document.aws_ebs_csi_driver.json
+  aws_account_number          = var.aws_account_id
+  service_account_name        = var.aws_ebs_csi_driver_sa_name
+  service_account_namespace   = var.aws_ebs_csi_driver_sa_namespace
+  eks_cluster_oidc_issuer_url = var.eks_cluster_oidc_issuer_url
+
+  context = module.this.context
+}
+
 data "aws_iam_policy_document" "aws_efs_csi_driver" {
   statement {
     effect    = "Allow"

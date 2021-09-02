@@ -25,6 +25,11 @@ locals {
   gh_grafana_client_secret = local.github["grafana_client_secret"]
 
   service_accounts = module.service_accounts
+  aws_ebs_csi_driver_sa = {
+    name      = local.service_accounts["aws_ebs_csi_driver"]["service_account_name"]
+    namespace = local.service_accounts["aws_ebs_csi_driver"]["service_account_namespace"]
+    role_arn  = local.service_accounts["aws_ebs_csi_driver"]["service_account_role_arn"]
+  }
   aws_efs_csi_driver_sa = {
     name      = local.service_accounts["aws_efs_csi_driver"]["service_account_name"]
     namespace = local.service_accounts["aws_efs_csi_driver"]["service_account_namespace"]

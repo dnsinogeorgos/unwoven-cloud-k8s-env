@@ -6,13 +6,15 @@ controller:
     annotations:
       eks.amazonaws.com/role-arn: ${sa_role_arn}
     name: ${sa_name}
-#prometheus:
-#  servicemonitor:
-#    enabled: true # cannot use this, prometheus uses efs volumes
-#    labels:
-#      release: kube-prometheus-stack
+prometheus:
+  servicemonitor:
+    enabled: true # cannot use this, prometheus uses efs volumes
+    labels:
+      release: kube-prometheus-stack
 storageClasses:
   - name: efs-sc
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "false"
     parameters:
       basePath: /dynamic_provisioning
       directoryPerms: "700"
@@ -22,3 +24,4 @@ storageClasses:
       provisioningMode: efs-ap
     reclaimPolicy: Delete
     volumeBindingMode: Immediate
+    allowVolumeExpansion: true

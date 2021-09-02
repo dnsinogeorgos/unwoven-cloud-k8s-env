@@ -1,6 +1,6 @@
 # https://github.com/grafana/helm-charts/blob/promtail-3.7.0/charts/promtail/values.yaml
 config:
-  lokiAddress: http://loki:3100/loki/api/v1/push
+  lokiAddress: http://loki-distributed-distributor:3100/loki/api/v1/push
   snippets:
     extraScrapeConfigs: |
       - job_name: journal
@@ -31,10 +31,10 @@ config:
                 # logline example: 127.0.0.1 - - [21/Apr/2020:13:59:45 +0000] "GET /?foo=bar HTTP/1.1" 200 612 "http://example.com/lekkebot.html" "curl/7.58.0"
                 expression: '^(?P<host>[\w\.]+) - (?P<user>[^ ]*) \[(?P<timestamp>.*)\] "(?P<method>[^ ]*) (?P<request_url>[^ ]*) (?P<request_http_protocol>[^ ]*)" (?P<status>[\d]+) (?P<bytes_out>[\d]+) "(?P<http_referer>[^"]*)" "(?P<user_agent>[^"]*)"?'
             - labels:
-                host:
+#                host:
                 method:
                 status:
-                user_agent:
+#                user_agent:
     # enables multi-tenant mode, sends X-Scope-OrgID header
     extraClientConfigs: |
       tenant_id: "${account_id}"

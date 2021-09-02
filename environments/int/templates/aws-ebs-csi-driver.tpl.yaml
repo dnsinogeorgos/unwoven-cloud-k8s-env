@@ -1,0 +1,24 @@
+# https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/helm-chart-aws-ebs-csi-driver-2.1.0/charts/aws-ebs-csi-driver/values.yaml
+controller:
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: ${sa_role_arn}
+    name: ${sa_name}
+prometheus:
+  servicemonitor:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
+# https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/helm-chart-aws-ebs-csi-driver-2.1.0/examples/kubernetes/storageclass/specs/example.yaml
+storageClasses:
+  - name: gp3
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "false"
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+    allowVolumeExpansion: true
+    parameters:
+      encrypted: "true"
+      type: gp3

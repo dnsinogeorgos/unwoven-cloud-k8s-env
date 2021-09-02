@@ -27,3 +27,20 @@ module "kubeconfig" {
   cluster_id                                   = local.eks_cluster_id
   kubeconfig_aws_authenticator_additional_args = ["-r", local.role_arn]
 }
+
+resource "null_resource" "patch_kube-proxy_cm" {
+  provisioner "local-exec" {
+    command = "kubectl --kubeconfig ${module.kubeconfig.kubeconfig_filename} -n kube-system get cm kube-proxy-config -o yaml | sed 's/metricsBindAddress: 127.0.0.1:10249/metricsBindAddress: 0.0.0.0:10249/' | kubectl --kubeconfig ${module.kubeconfig.kubeconfig_filename} apply -f -"
+  }
+}
+
+resource "null_resource" "patch_kube-proxy_ds" {
+  provisioner "local-exec" {
+    command = <<-EOF
+                JSON="{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"updateTime\":\"$(date +"%s")\"}}}}}"
+                kubectl --kubeconfig ${module.kubeconfig.kubeconfig_filename} -n kube-system patch ds kube-proxy -p "$JSON"
+              EOF
+  }
+
+  depends_on = [null_resource.patch_kube-proxy_cm]
+}

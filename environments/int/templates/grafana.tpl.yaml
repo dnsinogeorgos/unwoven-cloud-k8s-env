@@ -21,10 +21,6 @@ dashboards:
       datasource: Prometheus
       gnetId: 3831
       revision: 1
-    contour:
-      datasource: Prometheus
-      gnetId: 11023
-      revision: 1
     ingress-nginx:
       datasource: Prometheus
       gnetId: 9614
@@ -55,7 +51,7 @@ datasources:
 %{ for name, id in loki_tenant_ids ~}
       - name: Loki ${name}
         type: loki
-        url: http://loki:3100
+        url: http://loki-distributed-query-frontend:3100
         access: proxy
         version: 1
         jsonData:
@@ -84,8 +80,8 @@ grafana.ini:
     auth_url: https://github.com/login/oauth/authorize
     token_url: https://github.com/login/oauth/access_token
     scopes: user:email,read:org
-#    allowed_organizations: ""
-#    team_ids: ""
+  #    allowed_organizations: ""
+  #    team_ids: ""
   date_formats:
     default_timezone: browser
     use_browser_locale: true
@@ -96,10 +92,12 @@ grafana.ini:
     root_url: https://grafana.${zone_name}
 imageRenderer:
   enabled: true
+  replicas: 3
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
 ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    projectcontour.io/websocket-routes: /
   enabled: true
   hosts:
     - grafana.${zone_name}

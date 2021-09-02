@@ -2,6 +2,10 @@ output "cluster_autoscaler" {
   value = module.cluster_autoscaler
 }
 
+output "aws_ebs_csi_driver" {
+  value = module.aws_ebs_csi_driver
+}
+
 output "aws_efs_csi_driver" {
   value = module.aws_efs_csi_driver
 }

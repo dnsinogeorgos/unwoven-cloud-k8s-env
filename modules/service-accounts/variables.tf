@@ -11,6 +11,22 @@ variable "route53_zone_id" {
   default = ""
 }
 
+# aws-ebs-csi-driver
+variable "aws_ebs_csi_driver_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "aws_ebs_csi_driver_sa_name" {
+  type    = string
+  default = "aws-ebs-csi-driver-sa"
+}
+
+variable "aws_ebs_csi_driver_sa_namespace" {
+  type    = string
+  default = "aws-ebs-csi-driver"
+}
+
 # aws-efs-csi-driver
 variable "aws_efs_csi_driver_enabled" {
   type    = bool

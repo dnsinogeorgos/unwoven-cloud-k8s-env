@@ -28,7 +28,7 @@ module "ingress_secret_prometheus" {
   users = var.admins
 }
 
-// thanos sidecart stales at destroy, tries to ship metrics to S3 but
+// thanos sidecar stales at destroy, tries to ship metrics to S3 but
 // has no permissions. fix dependencies to destroy before service accounts
 resource "helm_release" "kube-prometheus-stack" {
   name       = "kube-prometheus-stack"
@@ -66,18 +66,18 @@ module "ingress_secret_loki" {
   users = [for _, tenant_id in local.loki_tenant_ids : tenant_id]
 }
 
-resource "helm_release" "loki" {
-  name       = "loki"
+resource "helm_release" "loki-distributed" {
+  name       = "loki-distributed"
   repository = "https://grafana.github.io/helm-charts"
-  chart      = "loki"
-  version    = "2.6.0"
+  chart      = "loki-distributed"
+  version    = "0.36.0"
   atomic     = true
   wait       = true // need this for destroy ordering
-  timeout    = 120
+  timeout    = 300
 
   namespace = kubernetes_namespace.observability.id
 
-  values = [templatefile("${path.module}/templates/loki.tpl.yaml", {
+  values = [templatefile("${path.module}/templates/loki-distributed.tpl.yaml", {
     sa_role_arn = local.loki_sa.role_arn
     sa_name     = local.loki_sa.name
     bucket_id   = local.bucket_loki["bucket_id"]

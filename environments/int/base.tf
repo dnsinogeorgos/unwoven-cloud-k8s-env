@@ -10,6 +10,7 @@ module "service_accounts" {
   eks_cluster_oidc_issuer_url = local.eks_cluster_oidc_issuer_url
   route53_zone_id             = local.zone_id
 
+  aws_ebs_csi_driver_enabled = true
   aws_efs_csi_driver_enabled = true
   cert_manager_enabled       = true
   cluster_autoscaler_enabled = true
@@ -26,6 +27,30 @@ module "service_accounts" {
   grafana_sa_namespace                = local.observability_namespace_name
 
   context = module.this.context
+}
+
+// https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html
+resource "helm_release" "aws-ebs-csi-driver" {
+  name       = "aws-ebs-csi-driver"
+  repository = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver/"
+  chart      = "aws-ebs-csi-driver"
+  version    = "2.1.0"
+  atomic     = true
+  timeout    = 60
+
+  namespace        = local.aws_ebs_csi_driver_sa.namespace
+  create_namespace = true
+
+  values = [templatefile("${path.module}/templates/aws-ebs-csi-driver.tpl.yaml", {
+    sa_role_arn = local.aws_ebs_csi_driver_sa.role_arn
+    sa_name     = local.aws_ebs_csi_driver_sa.name
+  })]
+
+  // users of driver need time to shutdown before driver id destroyed
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sleep 60"
+  }
 }
 
 resource "helm_release" "aws-efs-csi-driver" {
@@ -45,7 +70,7 @@ resource "helm_release" "aws-efs-csi-driver" {
     efs_id      = local.efs_id
   })]
 
-  // users of efs-sc need time to shutdown before driver id destroyed
+  // users of driver need time to shutdown before driver id destroyed
   provisioner "local-exec" {
     when    = destroy
     command = "sleep 60"
@@ -155,7 +180,7 @@ resource "helm_release" "ingress-nginx" {
   chart      = "ingress-nginx"
   version    = "3.36.0"
   atomic     = true
-  timeout    = 120
+  timeout    = 180
 
   namespace        = "nginx-ingress"
   create_namespace = true
@@ -164,19 +189,3 @@ resource "helm_release" "ingress-nginx" {
 
   depends_on = [helm_release.kube-prometheus-stack]
 }
-
-//resource "helm_release" "contour" {
-//  name       = "contour"
-//  repository = "https://charts.bitnami.com/bitnami"
-//  chart      = "contour"
-//  version    = "5.1.0"
-//  atomic     = true
-//  timeout    = 300
-//
-//  namespace        = "contour"
-//  create_namespace = true
-//
-//  values = [templatefile("${path.module}/templates/contour.tpl.yaml", {})]
-//
-//  depends_on = [helm_release.kube-prometheus-stack]
-//}
